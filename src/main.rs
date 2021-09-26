@@ -1,48 +1,62 @@
 #![feature(core_intrinsics)]
 #![feature(lang_items)]
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
+#![reexport_test_harness_main = "test_main"]
 #![no_std]
 #![no_main]
 
-use core::fmt::Write;
 use core::panic::PanicInfo;
-
 use x86_64::instructions::hlt;
 
 mod color;
-mod cursor;
+mod serial;
 mod vga_buffer;
-use color::{Color, ColorCode};
-use cursor::Cursor;
-use vga_buffer::*;
+mod testable;
+mod utils;
 
-pub fn print_something() {
-    let mut writer = Writer {
-        column_position: 0,
-        color_code: ColorCode::new(Color::Yellow, Color::Black),
-        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
-    };
-
-    writer.write_byte(b'H');
-    writer.write_string("ello ");
-    writer.write_string("Wörld!\n");
-    writer.write_string("Awruk!\n");
+#[cfg(test)]
+fn test_runner(tests: &[&dyn Fn()]) {
+    serial_println!("Running {} tests", tests.len());
+    for test in tests {
+        use testable::Testable;
+        test.run();
+    }
+    utils::exit_qemu(utils::QemuExitCode::Success);
 }
 
-#[panic_handler]
-#[no_mangle]
-pub fn panic(info: &PanicInfo) -> ! {
-    println!("{}", info);
+#[test_case]
+fn trivial_assertion() {
+    assert_eq!(1, 1);
+}
 
-    loop {
-        hlt();
-    }
+
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
+    loop {}
+}
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    serial_println!("[failed]\n");
+    serial_println!("Error: {}\n", info);
+    utils::exit_qemu(utils::QemuExitCode::Failed);
+    loop {}
 }
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    print_something();
-    println!("DSADSA");
-    println!("Test {}", 5132.31);
+    utils::print_logo();
+    println!("");
+    println!("Welcome!");
+    println!("Awruk!");
+    println!("Test value: {}\n", 5132.31);
+
+    #[cfg(test)]
+    test_main();
     // panic!("help!");
     loop {
         hlt();

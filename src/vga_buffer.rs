@@ -6,7 +6,7 @@ use spin::Mutex;
 lazy_static! {
     pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
         column_position: 0,
-        color_code: ColorCode::new(Color::Yellow, Color::Black),
+        color_code: ColorCode::new(Color::White, Color::Black),
         buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
     });
 }
@@ -44,10 +44,9 @@ impl Writer {
                 let row = BUFFER_HEIGHT - 1;
                 let col = self.column_position;
 
-                let color_code = self.color_code;
                 let screen_char = ScreenChar {
                     ascii_character: byte,
-                    color_code,
+                    color_code: self.color_code,
                 };
                 unsafe {
                     core::ptr::write_volatile(&mut self.buffer.chars[row][col], screen_char);
@@ -99,6 +98,14 @@ impl fmt::Write for Writer {
         self.write_string(s);
         Ok(())
     }
+}
+
+
+pub fn change_color(color : Color) {
+    WRITER.lock().color_code = ColorCode::new(color, Color::Black);
+}
+pub fn reset_color() {
+    WRITER.lock().color_code = ColorCode::new(Color::White, Color::Black);
 }
 
 #[macro_export]
