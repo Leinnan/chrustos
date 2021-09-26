@@ -17,7 +17,6 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
 }
 
 pub fn print_logo() {
-
     let text = r###"
                               _           _  __
                         _ |_ |_)    _ _|_/ \(_ 

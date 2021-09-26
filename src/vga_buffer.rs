@@ -100,8 +100,7 @@ impl fmt::Write for Writer {
     }
 }
 
-
-pub fn change_color(color : Color) {
+pub fn change_color(color: Color) {
     WRITER.lock().color_code = ColorCode::new(color, Color::Black);
 }
 pub fn reset_color() {

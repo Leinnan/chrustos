@@ -11,9 +11,9 @@ use x86_64::instructions::hlt;
 
 mod color;
 mod serial;
-mod vga_buffer;
 mod testable;
 mod utils;
+mod vga_buffer;
 
 #[cfg(test)]
 fn test_runner(tests: &[&dyn Fn()]) {
@@ -29,7 +29,6 @@ fn test_runner(tests: &[&dyn Fn()]) {
 fn trivial_assertion() {
     assert_eq!(1, 1);
 }
-
 
 #[cfg(not(test))]
 #[panic_handler]
